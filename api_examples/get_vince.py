@@ -43,24 +43,27 @@ def safe_print(st):
 
 def create_response(key,turl):
     r =  requests.get(turl, headers=auth_header, stream=True)
-    result["debug_"+key] = {"ok":str(r.ok),"headers":dict(r.headers),
-                            "url": turl,
-                            "status_code": str(r.status_code)}
+    result[f"debug_{key}"] = {
+        "ok": str(r.ok),
+        "headers": dict(r.headers),
+        "url": turl,
+        "status_code": str(r.status_code),
+    }
+
     if r.status_code == 200:
         result[key] = json.loads(str(r.text))
 
 def vince_to_cvrf(vince):
-    cvrf ={}
-    cvrf["document"] = {}
+    cvrf = {"document": {}}
     cvrf["document"]["title"] = vince["get_case"]["title"]
     cvrf["document"]["type"] = "CERT/CC Vulnerability Notes Database Advisory"
     cvrf["document"]["csaf_version"] = "2.0"
     cvrf["document"]["publisher"] = {"contact_details":
                                      "Email: cert@cert.org, Phone: +1412 268 5800",
-		                     "issuing_authority":
+    "issuing_authority":
                                      "CERT/CC under DHS/CISA https://www.cisa.gov/cybersecurity"+
                                      " also see https://kb.cert.org/ ",
-		                     "type":"coordinator"
+    "type":"coordinator"
     }
     cvrf["document"]["tracking"] = {}
     cvrf["document"]["tracking"]["id"] = vince["get_case"]["vuid"]
@@ -88,21 +91,24 @@ def vince_to_cvrf(vince):
     cvrf["document"]["acknowledgements"][0]["text"] = "Please see Acknowledgements section of "+"https://kb.cert.org/vuls/id/"+vince["get_case"]["vuid"]
     cvrf["document"]["product_tree"] = []
     #cvrf["document"]["vulnerability"] = vince["get_vuls"]
-    cvrf["document"]["vulnerabilities"] = []
-    #map vulnerabilities to cvrf
-    for k in vince["get_vuls"]:
-        cvrf["document"]["vulnerabilities"].append({"title":k["description"],
-                                                    "cve":k["name"]})
+    cvrf["document"]["vulnerabilities"] = [
+        {"title": k["description"], "cve": k["name"]}
+        for k in vince["get_vuls"]
+    ]
+
     return cvrf
 
     
 api_base = "https://kb.cert.org/vince/comm/api"
-url_map = { "get_cases": api_base+'/cases/',
-            "get_case": api_base+"/case/$case/",
-            "get_posts": api_base+"/case/posts/$case/",
-            "get_original_report": api_base+"/case/report/$case/",
-            "get_vendors": api_base+"/case/vendors/$case/",
-            "get_vuls": api_base+"/case/vuls/$case/"}
+url_map = {
+    "get_cases": f'{api_base}/cases/',
+    "get_case": f"{api_base}/case/$case/",
+    "get_posts": f"{api_base}/case/posts/$case/",
+    "get_original_report": f"{api_base}/case/report/$case/",
+    "get_vendors": f"{api_base}/case/vendors/$case/",
+    "get_vuls": f"{api_base}/case/vuls/$case/",
+}
+
 
 
 if __name__ == '__main__':
@@ -112,7 +118,7 @@ if __name__ == '__main__':
     parser.add_argument('output-type', nargs='?',type=str, help='cvrf',default='cvrf')
     args = parser.parse_args()
     token = getpass.getpass("Enter API Token:")
-    auth_header = {"Authorization": "Token {}".format(token)}
+    auth_header = {"Authorization": f"Token {token}"}
     result = {}
     sys.excepthook = fatal_exit    
 
